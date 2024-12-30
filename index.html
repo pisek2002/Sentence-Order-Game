@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sentence Order Game</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            margin: 20px;
+        }
+        .sentence {
+            font-size: 1.5em;
+            margin-bottom: 20px;
+        }
+        .word-container {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-bottom: 20px;
+        }
+        .word {
+            padding: 10px 15px;
+            background-color: #f0f0f0;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            cursor: pointer;
+            user-select: none;
+        }
+        .selected {
+            background-color: #d0f0d0;
+        }
+        .result {
+            font-size: 1.2em;
+            font-weight: bold;
+            margin-top: 20px;
+        }
+        .score {
+            font-size: 1.2em;
+            margin-top: 20px;
+        }
+        .timer {
+            font-size: 1.2em;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Sentence Order Game</h1>
+    <div id="game">
+        <div class="sentence" id="sentence">กรุณาเลือกคำตามลำดับ</div>
+        <div class="word-container" id="word-container"></div>
+        <div class="timer" id="timer">เวลา: 60 วินาที</div>
+        <div class="score" id="score">คะแนน: 0</div>
+        <button onclick="checkAnswer()">ตรวจคำตอบ</button>
+        <div class="result" id="result"></div>
+    </div>
+
+   
+    <audio id="bg-music" src="https://freetouse.com/music/Living_by_Aylex.mp3" loop autoplay muted></audio>
+
+
+    <script>
+        const sentences = [
+        
+            { sentence: "日本語を学ぶのは楽しいです。", words: ["日本語を", "学ぶのは", "楽しい", "です"], audio: "audio11.mp3" },
+            { sentence: "日本語の文法を勉強します。", words: ["日本語の", "文法を", "勉強", "します"], audio: "audio12.mp3" },
+            { sentence: "毎日新しい単語を覚えます。", words: ["毎日", "新しい", "単語を", "覚えます"], audio: "audio13.mp3" },
+            { sentence: "日本語で日記を書きます。", words: ["日本語で", "日記を", "書きます"], audio: "audio14.mp3" },
+            { sentence: "私は日本語を勉強しています。", words: ["私は", "日本語", "を", "勉強", "しています"]},
+            { sentence: "彼は先生です。", words: ["彼は", "先生", "です"], },
+            { sentence: "明日は天気がいいです。", words: ["明日は", "天気が", "いい", "です"]},
+            { sentence: "私は学生です。", words: ["私は", "学生", "です"], audio: "audio4.mp3" },
+            { sentence: "今日の晩ごはんはカレーです。", words: ["今日の", "晩ごはんは", "カレー", "です"] },
+            { sentence: "彼女は図書館に行きます。", words: ["彼女は", "図書館に", "行きます"] },
+            { sentence: "猫が好きです。", words: ["です","猫が", "好き" ], audio: "audio7.mp3" },
+            { sentence: "毎朝コーヒーを飲みます。", words: ["毎朝", "飲みます","コーヒーを" ] },
+            { sentence: "来週旅行します。", words: ["します","来週", "旅行", ]},
+            { sentence: "学校で勉強します。", words: ["勉強", "します","学校で"], },
+           
+        ];
+
+        let currentIndex = 0;
+        let selectedOrder = [];
+        let score = 0;
+        let timeLeft = 60;
+        const timerElement = document.getElementById('timer');
+        const scoreElement = document.getElementById('score');
+        const resultDiv = document.getElementById('result');
+        const wordContainer = document.getElementById('word-container');
+        const sentenceDiv = document.getElementById('sentence');
+        const audioElement = document.getElementById('audio');
+        const bgMusicElement = document.getElementById('bg-music');
+
+        function startGame() {
+            bgMusicElement.muted = false; // ปลดเสียง
+            bgMusicElement.play();
+            loadSentence();
+            startTimer();
+        }
+        
+
+        function loadSentence() {
+            selectedOrder = [];
+            wordContainer.innerHTML = '';
+            resultDiv.textContent = '';
+
+            const currentSentence = sentences[currentIndex];
+            sentenceDiv.textContent = "กรุณาเลือกคำตามลำดับ";
+            shuffledWords = [...currentSentence.words].sort(() => Math.random() - 0.5);
+
+            shuffledWords.forEach(word => {
+                const wordElement = document.createElement('div');
+                wordElement.textContent = word;
+                wordElement.className = 'word';
+                wordElement.onclick = () => selectWord(wordElement, word);
+                wordContainer.appendChild(wordElement);
+            });
+
+            audioElement.src = currentSentence.audio;
+            audioElement.play();
+        }
+
+        function selectWord(element, word) {
+            if (!selectedOrder.includes(word)) {
+                selectedOrder.push(word);
+                element.textContent = `${selectedOrder.length}: ${word}`;
+                element.classList.add('selected');
+            } else {
+                alert("คุณได้เลือกคำนี้ไปแล้ว!");
+            }
+        }
+
+        function checkAnswer() {
+            const currentSentence = sentences[currentIndex];
+            const joinedSentence = selectedOrder.join('');
+            if (joinedSentence === currentSentence.sentence.replace(/。/g, '')) {
+                score += 10;
+                resultDiv.textContent = "ถูกต้อง! 🎉";
+                resultDiv.style.color = "green";
+                scoreElement.textContent = `คะแนน: ${score}`;
+                nextSentence();
+            } else {
+                resultDiv.textContent = "ผิด ลองอีกครั้ง! ❌";
+                resultDiv.style.color = "red";
+            }
+        }
+
+        function nextSentence() {
+            currentIndex++;
+            if (currentIndex < sentences.length) {
+                setTimeout(loadSentence, 1000);
+            } else {
+                endGame();
+            }
+        }
+
+        function startTimer() {
+            const timerInterval = setInterval(() => {
+                timeLeft--;
+                timerElement.textContent = `เวลา: ${timeLeft} วินาที`;
+
+                if (timeLeft <= 0) {
+                    clearInterval(timerInterval);
+                    endGame();
+                }
+            }, 1000);
+        }
+
+        function endGame() {
+            bgMusicElement.pause();
+            resultDiv.textContent = `เกมจบแล้ว! คะแนนรวมของคุณคือ ${score}`;
+            resultDiv.style.color = "blue";
+            wordContainer.innerHTML = '';
+        }
+
+        startGame();
+    </script>
+</body>
+</html>
